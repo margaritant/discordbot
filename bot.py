@@ -41,7 +41,7 @@ class MyClient(discord.Client):
       if content:
         new_announcements = self.monitor.parse_announcements(content)
         if new_announcements:
-          response = "\n".join(new_announcements)
+          response = "\n".join([f"{text} ({link})" for text, link in new_announcements])
           await message.channel.send(f"Announcements:\n{response}")
         else:
           await message.channel.send("No new announcements.")
@@ -59,8 +59,8 @@ class MyClient(discord.Client):
   async def send_update_notification(self, new_announcements):
     channel = self.get_channel(self.channel_id)
     if channel:
-      for announcement in new_announcements:
-        await channel.send(f"New announcement: {announcement}")
+      for text, link in new_announcements:
+        await channel.send(f"New announcement: {text} ({link})")
 
 
 intents = discord.Intents.default()
