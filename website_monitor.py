@@ -6,18 +6,19 @@ from bs4 import BeautifulSoup
 
 class WebsiteMonitor:
     def __init__(self, url):
-        self.url = url
+        self.url = url  # URL of the website to monitor
         self.last_announcements = set()  # To store the last fetched announcements
-        self.driver = self.setup_driver()
+        self.driver = self.setup_driver()  # Set up the Selenium WebDriver
 
     def setup_driver(self):
         options = Options()
-        options.headless = True  # Run in headless mode
+        options.headless = True  # Run in headless mode (no GUI)
         service = ChromeService(executable_path=ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         return driver
 
     def fetch_website_content(self):
+        # Fetch the website content using Selenium
         try:
             self.driver.get(self.url)
             return self.driver.page_source
@@ -26,8 +27,13 @@ class WebsiteMonitor:
         return None
 
     def parse_announcements(self, content):
+        # Parse announcements from the fetched content using BeautifulSoup
         soup = BeautifulSoup(content, 'html.parser')
         announcements = set()
+
+        # Find all div elements with the specific class names for titles and links
+        # These class names are specific to the current structure of the monitored website.
+        # If the website's structure changes, these selectors need to be updated accordingly.
         headers = soup.find_all('div', class_='views-field views-field-title')
         links = soup.find_all('div', class_='views-field views-field-view-node')
 
@@ -42,13 +48,14 @@ class WebsiteMonitor:
         return announcements
 
     def check_for_new_announcements(self, content):
+        # Compare the current announcements with the last fetched announcements
         current_announcements = self.parse_announcements(content)
         new_announcements = current_announcements - self.last_announcements
         self.last_announcements = current_announcements
         return new_announcements
 
     async def initialize_last_announcements(self, channel):
-        """Fetch previous messages in the channel and initialize last_announcements."""
+        # Initialize the last announcements from the previous messages in the channel
         async for message in channel.history(limit=100):  # Adjust limit as needed
             if message.author == channel.guild.me:  # Only consider messages sent by the bot
                 content = message.content.replace("New announcement: ", "").strip()
